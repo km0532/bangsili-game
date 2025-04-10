@@ -94,8 +94,8 @@
 
     function updateGame() {
       drawStaff();
-      drawNote();
-      requestAnimationFrame(updateGame);
+      drawNote();  // 음표 그리기
+      requestAnimationFrame(updateGame); // 매 프레임마다 updateGame 호출
     }
 
     function startRecognition() {
