@@ -63,6 +63,7 @@
     let currentNote = null;
     let score = 0;
     let timeLeft = 30;
+    let noteShown = false;  // 음표가 나타났는지 체크하는 변수
 
     // 음표 그리기
     function drawStaff() {
@@ -76,15 +77,19 @@
       }
     }
 
-    // 음표 그리기
+    // 음표 랜덤 생성
     function drawNote() {
-      const noteIndex = Math.floor(Math.random() * notes.length);
-      currentNote = notes[noteIndex];
-      
-      ctx.beginPath();
-      ctx.arc(canvas.width / 2, currentNote.y, 10, 0, 2 * Math.PI);
-      ctx.fillStyle = '#000';
-      ctx.fill();
+      if (!noteShown) {
+        const noteIndex = Math.floor(Math.random() * notes.length);
+        currentNote = notes[noteIndex];
+
+        ctx.beginPath();
+        ctx.arc(canvas.width / 2, currentNote.y, 10, 0, 2 * Math.PI);
+        ctx.fillStyle = '#000';
+        ctx.fill();
+
+        noteShown = true;  // 음표가 나타났다고 설정
+      }
     }
 
     function updateGame() {
@@ -120,8 +125,7 @@
     }
 
     function generateNewNote() {
-      const index = Math.floor(Math.random() * notes.length);
-      currentNote = notes[index];
+      noteShown = false;  // 새로운 음표를 나타내기 위해 음표 표시 상태를 리셋
       feedbackEl.textContent = '음표를 맞혀보세요!';
     }
 
