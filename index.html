@@ -3,24 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>방실이의 음표 챌린지</title>
+  <title>음표 맞추기 게임</title>
   <style>
     body {
       font-family: sans-serif;
       text-align: center;
       background: #fafafa;
-      overflow: hidden;
     }
+
     canvas {
       border: 2px solid #444;
       margin-top: 20px;
       background: #fff;
     }
+
     button {
       padding: 10px 20px;
       font-size: 16px;
       margin-top: 20px;
     }
+
     #feedback, #score, #timer {
       margin-top: 10px;
       font-size: 18px;
@@ -34,7 +36,6 @@
   <div id="timer">남은 시간: 30초</div>
   <canvas id="gameCanvas" width="360" height="500"></canvas>
   <br>
-  <button onclick="startRecognition()">🎤 말하기 시작</button>
   <div id="feedback">음표를 맞혀보세요!</div>
 
   <audio id="correctSound" src="https://www.soundjay.com/buttons/sounds/button-4.mp3"></audio>
@@ -60,25 +61,10 @@
     ];
 
     let currentNote = null;
-    let fallingNote = { y: 0, name: '', speed: 2 };
     let score = 0;
     let timeLeft = 30;
-    let feedbackImage = null;
-    let feedbackTimer = null;
 
-    // Correct URLs for images
-    const bangsili = new Image();
-    bangsili.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Goat.svg/120px-Goat.svg.png'; // 방실이 이미지 URL
-
-    const clef = new Image();
-    clef.src = 'https://upload.wikimedia.org/wikipedia/commons/2/25/Gclef.svg';
-
-    const noteImage = new Image();
-    noteImage.src = 'https://upload.wikimedia.org/wikipedia/commons/7/75/Music_Note_Four.svg'; // 음표 이미지 URL
-
-    const sadImage = new Image();
-    sadImage.src = 'https://example.com/sad-goat-image.png'; // 슬픈 방실이 이미지 URL (변경해야 할 부분)
-
+    // 음표 그리기
     function drawStaff() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.strokeStyle = '#000';
@@ -88,51 +74,19 @@
         ctx.lineTo(canvas.width - 30, 100 + i * 20);
         ctx.stroke();
       }
-      ctx.drawImage(clef, 35, 90, 30, 60);
     }
 
-    function drawNote(note) {
-      ctx.drawImage(noteImage, canvas.width / 2 - 10, note.y - 10, 20, 30);
-    }
-
-    function drawBangsili(success = false) {
-      const x = 140;
-      const y = 400 + (success ? -10 * Math.sin(Date.now() / 100) : 0);
-      ctx.drawImage(bangsili, x, y, 80, 80);
-    }
-
-    function drawFeedbackImage() {
-      if (feedbackImage) {
-        ctx.drawImage(feedbackImage, 90, 180, 180, 180);
-      }
+    function drawNote() {
+      ctx.beginPath();
+      ctx.arc(canvas.width / 2, 100 + Math.floor(Math.random() * notes.length) * 20, 10, 0, 2 * Math.PI);
+      ctx.fillStyle = '#000';
+      ctx.fill();
     }
 
     function updateGame() {
       drawStaff();
-      if (fallingNote.name) {
-        fallingNote.y += fallingNote.speed;
-        drawNote(fallingNote);
-        if (fallingNote.y > canvas.height) {
-          resetNote();
-          feedbackEl.textContent = '놓쳤어요!';
-          wrongSound.play();
-          showFeedbackImage(sadImage);
-        }
-      }
-      drawBangsili();
-      drawFeedbackImage();
+      drawNote();
       requestAnimationFrame(updateGame);
-    }
-
-    function resetNote() {
-      const index = Math.floor(Math.random() * notes.length);
-      fallingNote = {
-        y: 120,
-        name: notes[index].name,
-        speed: 2 + Math.random() * 2
-      };
-      currentNote = fallingNote.name;
-      feedbackEl.textContent = '음표를 맞혀보세요!';
     }
 
     function startRecognition() {
@@ -149,12 +103,10 @@
           scoreEl.textContent = '점수: ' + score;
           correctSound.play();
           feedbackEl.textContent = '정답입니다! 🎉';
-          drawBangsili(true);
-          setTimeout(resetNote, 500);
+          setTimeout(generateNewNote, 500); // 새로운 음표 생성
         } else {
           feedbackEl.textContent = `틀렸어요! (${result})`;
           wrongSound.play();
-          showFeedbackImage(sadImage);
         }
       };
 
@@ -163,12 +115,10 @@
       };
     }
 
-    function showFeedbackImage(image) {
-      feedbackImage = image;
-      clearTimeout(feedbackTimer);
-      feedbackTimer = setTimeout(() => {
-        feedbackImage = null;
-      }, 1500);
+    function generateNewNote() {
+      const index = Math.floor(Math.random() * notes.length);
+      currentNote = notes[index].name;
+      feedbackEl.textContent = '음표를 맞혀보세요!';
     }
 
     function startTimer() {
@@ -182,16 +132,10 @@
       }, 1000);
     }
 
-    Promise.all([
-      new Promise((resolve) => { bangsili.onload = resolve; }),
-      new Promise((resolve) => { clef.onload = resolve; }),
-      new Promise((resolve) => { noteImage.onload = resolve; }),
-      new Promise((resolve) => { sadImage.onload = resolve; })
-    ]).then(() => {
-      resetNote();
-      updateGame();
-      startTimer();
-    });
+    generateNewNote();
+    startRecognition(); // 음성 인식 자동 시작
+    updateGame();
+    startTimer();
   </script>
 </body>
 </html>
