@@ -76,9 +76,13 @@
       }
     }
 
+    // 음표 그리기
     function drawNote() {
+      const noteIndex = Math.floor(Math.random() * notes.length);
+      currentNote = notes[noteIndex];
+      
       ctx.beginPath();
-      ctx.arc(canvas.width / 2, 100 + Math.floor(Math.random() * notes.length) * 20, 10, 0, 2 * Math.PI);
+      ctx.arc(canvas.width / 2, currentNote.y, 10, 0, 2 * Math.PI);
       ctx.fillStyle = '#000';
       ctx.fill();
     }
@@ -98,7 +102,7 @@
       recognition.onresult = (event) => {
         const result = event.results[0][0].transcript.trim();
         console.log('🎤 인식된 말:', result);
-        if (result.includes(currentNote)) {
+        if (result.includes(currentNote.name)) {
           score++;
           scoreEl.textContent = '점수: ' + score;
           correctSound.play();
@@ -117,7 +121,7 @@
 
     function generateNewNote() {
       const index = Math.floor(Math.random() * notes.length);
-      currentNote = notes[index].name;
+      currentNote = notes[index];
       feedbackEl.textContent = '음표를 맞혀보세요!';
     }
 
