@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>방실이의 음표 챌린지</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background: #fafafa;
+      overflow: hidden;
+    }
+    canvas {
+      border: 2px solid #444;
+      margin-top: 20px;
+      background: #fff;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-top: 20px;
+    }
+    #feedback, #score, #timer {
+      margin-top: 10px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎵 방실이의 음표 챌린지 🎵</h1>
+  <div id="score">점수: 0</div>
+  <div id="timer">남은 시간: 30초</div>
+  <canvas id="gameCanvas" width="360" height="500"></canvas>
+  <br>
+  <button onclick="startRecognition()">🎤 말하기 시작</button>
+  <div id="feedback"></div>
+
+  <audio id="correctSound" src="https://www.soundjay.com/buttons/sounds/button-4.mp3"></audio>
+  <audio id="wrongSound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    const timerEl = document.getElementById('timer');
+    const feedbackEl = document.getElementById('feedback');
+    const correctSound = document.getElementById('correctSound');
+    const wrongSound = document.getElementById('wrongSound');
+
+    const notes = ['도', '레', '미', '파', '솔', '라', '시'];
+    let currentNote = null;
+    let fallingNote = { y: 0, name: '', speed: 2 };
+    let score = 0;
+    let timeLeft = 30;
+
+    const bangsili = new Image();
+    bangsili.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Goat.svg/120px-Goat.svg.png';
+
+    function drawStaff() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#000';
+      for (let i = 0; i < 5; i++) {
+        ctx.beginPath();
+        ctx.moveTo(30, 100 + i * 20);
+        ctx.lineTo(canvas.width - 30, 100 + i * 20);
+        ctx.stroke();
+      }
+    }
+
+    function drawNote(note) {
+      ctx.beginPath();
+      ctx.arc(canvas.width / 2, note.y, 10, 0, 2 * Math.PI);
+      ctx.fillStyle = '#000';
+      ctx.fill();
+      ctx.font = '14px sans-serif';
+      ctx.fillText(note.name, canvas.width / 2 - 8, note.y - 15);
+    }
+
+    function drawBangsili(success = false) {
+      const x = 140;
+      const y = 400 + (success ? -10 * Math.sin(Date.now() / 100) : 0);
+      ctx.drawImage(bangsili, x, y, 80, 80);
+    }
+
+    function updateGame() {
+      drawStaff();
+      if (fallingNote.name) {
+        fallingNote.y += fallingNote.speed;
+        drawNote(fallingNote);
+        if (fallingNote.y > canvas.height) {
+          resetNote();
+          feedbackEl.textContent = '놓쳤어요!';
+          wrongSound.play();
+        }
+      }
+      drawBangsili();
+      requestAnimationFrame(updateGame);
+    }
+
+    function resetNote() {
+      const index = Math.floor(Math.random() * notes.length);
+      fallingNote = {
+        y: 120,
+        name: notes[index],
+        speed: 2 + Math.random() * 2
+      };
+      currentNote = fallingNote.name;
+      feedbackEl.textContent = '음표를 맞혀보세요!';
+    }
+
+    function startRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'ko-KR';
+      recognition.start();
+
+      recognition.onresult = (event) => {
+        const result = event.results[0][0].transcript.trim();
+        console.log('🎤 인식된 말:', result);
+        if (result.includes(currentNote)) {
+          score++;
+          scoreEl.textContent = '점수: ' + score;
+          correctSound.play();
+          feedbackEl.textContent = '정답입니다! 🎉';
+          drawBangsili(true);
+          setTimeout(resetNote, 500);
+        } else {
+          feedbackEl.textContent = `틀렸어요! (${result})`;
+          wrongSound.play();
+        }
+      };
+
+      recognition.onerror = (e) => {
+        feedbackEl.textContent = '음성 인식 오류: ' + e.error;
+      };
+    }
+
+    function startTimer() {
+      const timer = setInterval(() => {
+        timeLeft--;
+        timerEl.textContent = `남은 시간: ${timeLeft}초`;
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          feedbackEl.textContent = `게임 종료! 최종 점수: ${score}`;
+        }
+      }, 1000);
+    }
+
+    resetNote();
+    updateGame();
+    startTimer();
+  </script>
+</body>
+</html>
