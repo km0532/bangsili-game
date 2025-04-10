@@ -63,6 +63,8 @@
     let fallingNote = { y: 0, name: '', speed: 2 };
     let score = 0;
     let timeLeft = 30;
+    let feedbackImage = null;
+    let feedbackTimer = null;
 
     const bangsili = new Image();
     bangsili.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Goat.svg/120px-Goat.svg.png';
@@ -72,6 +74,9 @@
 
     const noteImage = new Image();
     noteImage.src = 'https://upload.wikimedia.org/wikipedia/commons/7/75/Music_Note_Four.svg';
+
+    const sadImage = new Image();
+    sadImage.src = 'https://raw.githubusercontent.com/km0532/bangsili-game/main/assets/bangsili_sad.png';
 
     function drawStaff() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -95,6 +100,12 @@
       ctx.drawImage(bangsili, x, y, 80, 80);
     }
 
+    function drawFeedbackImage() {
+      if (feedbackImage) {
+        ctx.drawImage(feedbackImage, 90, 180, 180, 180);
+      }
+    }
+
     function updateGame() {
       drawStaff();
       if (fallingNote.name) {
@@ -104,9 +115,11 @@
           resetNote();
           feedbackEl.textContent = '놓쳤어요!';
           wrongSound.play();
+          showFeedbackImage(sadImage);
         }
       }
       drawBangsili();
+      drawFeedbackImage();
       requestAnimationFrame(updateGame);
     }
 
@@ -140,12 +153,21 @@
         } else {
           feedbackEl.textContent = `틀렸어요! (${result})`;
           wrongSound.play();
+          showFeedbackImage(sadImage);
         }
       };
 
       recognition.onerror = (e) => {
         feedbackEl.textContent = '음성 인식 오류: ' + e.error;
       };
+    }
+
+    function showFeedbackImage(image) {
+      feedbackImage = image;
+      clearTimeout(feedbackTimer);
+      feedbackTimer = setTimeout(() => {
+        feedbackImage = null;
+      }, 1500);
     }
 
     function startTimer() {
@@ -159,13 +181,16 @@
       }, 1000);
     }
 
-    noteImage.onload = () => {
-      clef.onload = () => {
-        resetNote();
-        updateGame();
-        startTimer();
-      };
-    };
+    Promise.all([
+      new Promise((resolve) => { bangsili.onload = resolve; }),
+      new Promise((resolve) => { clef.onload = resolve; }),
+      new Promise((resolve) => { noteImage.onload = resolve; }),
+      new Promise((resolve) => { sadImage.onload = resolve; })
+    ]).then(() => {
+      resetNote();
+      updateGame();
+      startTimer();
+    });
   </script>
 </body>
 </html>
