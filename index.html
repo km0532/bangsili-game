@@ -35,7 +35,7 @@
   <canvas id="gameCanvas" width="360" height="500"></canvas>
   <br>
   <button onclick="startRecognition()">🎤 말하기 시작</button>
-  <div id="feedback"></div>
+  <div id="feedback">음표를 맞혀보세요!</div>
 
   <audio id="correctSound" src="https://www.soundjay.com/buttons/sounds/button-4.mp3"></audio>
   <audio id="wrongSound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
@@ -159,9 +159,13 @@
       }, 1000);
     }
 
-    resetNote();
-    updateGame();
-    startTimer();
+    noteImage.onload = () => {
+      clef.onload = () => {
+        resetNote();
+        updateGame();
+        startTimer();
+      };
+    };
   </script>
 </body>
 </html>
