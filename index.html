@@ -3,147 +3,64 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>음표 맞추기 게임</title>
+  <title>이미지 로딩 테스트</title>
   <style>
     body {
-      font-family: sans-serif;
+      font-family: Arial, sans-serif;
       text-align: center;
-      background: #fafafa;
+      padding: 20px;
     }
 
-    canvas {
-      border: 2px solid #444;
-      margin-top: 20px;
-      background: #fff;
-    }
-
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
+    img {
+      max-width: 100%;
+      height: auto;
+      border: 2px solid #333;
       margin-top: 20px;
     }
 
-    #feedback, #score, #timer {
-      margin-top: 10px;
-      font-size: 18px;
+    .error-message {
+      color: red;
       font-weight: bold;
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
-  <h1>🎵 방실이의 음표 챌린지 🎵</h1>
-  <div id="score">점수: 0</div>
-  <div id="timer">남은 시간: 30초</div>
-  <canvas id="gameCanvas" width="360" height="500"></canvas>
-  <br>
-  <div id="feedback">음표를 맞혀보세요!</div>
+  <h1>이미지 로딩 테스트</h1>
+  
+  <p>아래 URL을 통해 이미지를 로드해보세요:</p>
 
-  <audio id="correctSound" src="https://www.soundjay.com/buttons/sounds/button-4.mp3"></audio>
-  <audio id="wrongSound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
+  <input type="text" id="imageURL" placeholder="이미지 URL을 입력하세요" style="width: 80%; padding: 10px; font-size: 16px;">
+  <button onclick="loadImage()">이미지 로드</button>
+
+  <div id="imageContainer" style="margin-top: 20px;">
+    <img id="loadedImage" src="" alt="이미지가 로드됩니다." style="display:none;">
+    <p id="error-message" class="error-message"></p>
+  </div>
 
   <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const scoreEl = document.getElementById('score');
-    const timerEl = document.getElementById('timer');
-    const feedbackEl = document.getElementById('feedback');
-    const correctSound = document.getElementById('correctSound');
-    const wrongSound = document.getElementById('wrongSound');
+    function loadImage() {
+      const url = document.getElementById('imageURL').value;
+      const imgElement = document.getElementById('loadedImage');
+      const errorMessage = document.getElementById('error-message');
 
-    const notes = [
-      { name: '도', y: 180 },
-      { name: '레', y: 165 },
-      { name: '미', y: 150 },
-      { name: '파', y: 135 },
-      { name: '솔', y: 120 },
-      { name: '라', y: 105 },
-      { name: '시', y: 90 }
-    ];
+      // 이미지가 이미 있으면 숨기기
+      imgElement.style.display = 'none';
+      errorMessage.textContent = '';
 
-    let currentNote = null;
-    let score = 0;
-    let timeLeft = 30;
-    let noteShown = false;  // 음표가 나타났는지 체크하는 변수
-
-    // 음표 그리기
-    function drawStaff() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = '#000';
-      for (let i = 0; i < 5; i++) {
-        ctx.beginPath();
-        ctx.moveTo(30, 100 + i * 20);
-        ctx.lineTo(canvas.width - 30, 100 + i * 20);
-        ctx.stroke();
+      if (!url) {
+        errorMessage.textContent = 'URL을 입력해주세요!';
+        return;
       }
-    }
 
-    // 음표 랜덤 생성
-    function drawNote() {
-      if (!noteShown) {
-        const noteIndex = Math.floor(Math.random() * notes.length);
-        currentNote = notes[noteIndex];
-
-        ctx.beginPath();
-        ctx.arc(canvas.width / 2, currentNote.y, 10, 0, 2 * Math.PI);
-        ctx.fillStyle = '#000';
-        ctx.fill();
-
-        noteShown = true;  // 음표가 나타났다고 설정
-      }
-    }
-
-    function updateGame() {
-      drawStaff();
-      drawNote();  // 음표 그리기
-      requestAnimationFrame(updateGame); // 매 프레임마다 updateGame 호출
-    }
-
-    function startRecognition() {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
-      recognition.lang = 'ko-KR';
-      recognition.start();
-
-      recognition.onresult = (event) => {
-        const result = event.results[0][0].transcript.trim();
-        console.log('🎤 인식된 말:', result);
-        if (result.includes(currentNote.name)) {
-          score++;
-          scoreEl.textContent = '점수: ' + score;
-          correctSound.play();
-          feedbackEl.textContent = '정답입니다! 🎉';
-          setTimeout(generateNewNote, 500); // 새로운 음표 생성
-        } else {
-          feedbackEl.textContent = `틀렸어요! (${result})`;
-          wrongSound.play();
-        }
+      imgElement.src = url;
+      imgElement.onload = function () {
+        imgElement.style.display = 'block';  // 이미지가 성공적으로 로드되면 표시
       };
-
-      recognition.onerror = (e) => {
-        feedbackEl.textContent = '음성 인식 오류: ' + e.error;
+      imgElement.onerror = function () {
+        errorMessage.textContent = '이미지 로드 실패: URL을 확인해주세요.';
       };
     }
-
-    function generateNewNote() {
-      noteShown = false;  // 새로운 음표를 나타내기 위해 음표 표시 상태를 리셋
-      feedbackEl.textContent = '음표를 맞혀보세요!';
-    }
-
-    function startTimer() {
-      const timer = setInterval(() => {
-        timeLeft--;
-        timerEl.textContent = `남은 시간: ${timeLeft}초`;
-        if (timeLeft <= 0) {
-          clearInterval(timer);
-          feedbackEl.textContent = `게임 종료! 최종 점수: ${score}`;
-        }
-      }, 1000);
-    }
-
-    generateNewNote();
-    startRecognition(); // 음성 인식 자동 시작
-    updateGame();
-    startTimer();
   </script>
 </body>
 </html>
